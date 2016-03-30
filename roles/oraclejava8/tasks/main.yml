@@ -1,0 +1,10 @@
+---
+## Let's download the rpm (not the tar.gz)
+#- name: Java  | download
+#  command: "wget -q -O  /opt/jdk-8-linux-x64.rpm --no-check-certificate --no-cookies --header 'Cookie: oraclelicense=accept-securebackup-cookie' http://download.oracle.com/otn-pub/java/jdk/8u25-b17/jdk-8u25-linux-x64.rpm creates=/opt/jdk-8-linux-x64.rpm"
+
+## Invoke yum to install the rpm
+- name: Java  | install rpm
+  yum: name=/opt/jdk-8-linux-x64.rpm state=present
+
+- lineinfile: dest=/root/.bashrc regexp="^export JAVA_HOME" line="export JAVA_HOME=/usr/java/latest"

@@ -1,0 +1,11 @@
+[hadoop-master]
+172.17.0.9              ansible_connection=local  ansible_ssh_user=root
+
+[hadoop-data]
+172.17.0.11             ansible_connection=ssh    ansible_ssh_user=root
+
+[hadoop-master:vars]
+nodesfile=nodes-dev
+
+[hadoop-data:vars]
+nodesfile=nodes-dev

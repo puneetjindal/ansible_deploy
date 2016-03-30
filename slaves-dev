@@ -1,0 +1,3 @@
+nodes:
+  - hostname: hadoop-data1
+    ip: 172.17.0.11
