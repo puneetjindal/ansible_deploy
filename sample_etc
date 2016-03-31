@@ -1,2 +1,2 @@
-172.17.0.9 hadoop-master
-172.17.0.11 hadoop-data1
+127.0.0.1 hadoop-master
+205.147.109.63 hadoop-data

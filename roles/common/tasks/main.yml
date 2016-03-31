@@ -6,8 +6,10 @@
 
 - authorized_key: user={{ hadoop_user }} key="{{ lookup('file', '../templates/hadoop_rsa.pub') }}"
 
-#- name: Extract hadoop archive
-#  unarchive: src=/hadoop-2.7.1.tar.gz dest=/opt/ owner={{ hadoop_user}} group={{ hadoop_group }} copy=no mode=755
+- name: Extract hadoop archive
+  unarchive: src=/hadoop-2.7.2.tar.gz dest=/ owner={{ hadoop_user}} group={{ hadoop_group }} copy=no mode=755
+
+- command: mv /hadoop-2.7.2 /opt/hadoop creates=/opt/hadoop removes=/hadoop-2.7.2
   
 - lineinfile: dest=/root/.bashrc regexp="HADOOP_HOME=" line="export HADOOP_HOME=/opt/hadoop"
 - lineinfile: dest=/root/.bashrc regexp="PATH=" line="export PATH=$PATH:$HADOOP_HOME/bin"
@@ -26,7 +28,7 @@
 - name: Add the service scripts
   template: src={{ item.src }} dest={{ item.dest }} owner={{ hadoop_user}} group={{ hadoop_group }}
   with_items:
-    - {src: "core-site.xml", dest: "/opt/hadoop/etc/hadoop/core-site.xml"}
-    - {src: "hdfs-site.xml", dest: "/opt/hadoop/etc/hadoop/hdfs-site.xml"}
-    - {src: "yarn-site.xml", dest: "/opt/hadoop/etc/hadoop/yarn-site.xml"}
-    - {src: "mapred-site.xml", dest: "/opt/hadoop/etc/hadoop/mapred-site.xml"}
+    - {src: "roles/common/templates/core-site.xml", dest: "/opt/hadoop/etc/hadoop/core-site.xml"}
+    - {src: "roles/common/templates/hdfs-site.xml", dest: "/opt/hadoop/etc/hadoop/hdfs-site.xml"}
+    - {src: "roles/common/templates/yarn-site.xml", dest: "/opt/hadoop/etc/hadoop/yarn-site.xml"}
+    - {src: "roles/common/templates/mapred-site.xml", dest: "/opt/hadoop/etc/hadoop/mapred-site.xml"}
