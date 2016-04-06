@@ -37,4 +37,8 @@
   <name>yarn.resourcemanager.address</name>
   <value>{{ nodes[0]['hostname'] }}:8040</value>
 </property>
+<property>
+  <name>yarn.nodemanager.localizer.address</name>
+  <value>{{ nodes[0]['hostname'] }}:8060</value>
+</property>
 </configuration>

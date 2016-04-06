@@ -6,17 +6,30 @@
 
 - authorized_key: user={{ hadoop_user }} key="{{ lookup('file', '../templates/hadoop_rsa.pub') }}"
 
-- name: Extract hadoop archive
-  unarchive: src=/hadoop-2.7.2.tar.gz dest=/ owner={{ hadoop_user}} group={{ hadoop_group }} copy=no mode=755
+#- name: Extract hadoop archive
+#  unarchive: src=/hadoop-2.7.2.tar.gz dest=/ owner={{ hadoop_user}} group={{ hadoop_group }} copy=yes mode=755
 
 - command: mv /hadoop-2.7.2 /opt/hadoop creates=/opt/hadoop removes=/hadoop-2.7.2
-  
+
+- lineinfile: dest=/root/.bashrc line="ulimit -n 65000"  
 - lineinfile: dest=/root/.bashrc regexp="HADOOP_HOME=" line="export HADOOP_HOME=/opt/hadoop"
 - lineinfile: dest=/root/.bashrc regexp="PATH=" line="export PATH=$PATH:$HADOOP_HOME/bin"
 - lineinfile: dest=/root/.bashrc regexp="HADOOP_SSH_OPTS=" line="export HADOOP_SSH_OPTS=\"-i /{{ hadoop_user }}/.ssh/hadoop_rsa\""
+- lineinfile: dest=/root/.bashrc regexp="HADOOP_MAPRED_HOME=" line="export HADOOP_MAPRED_HOME=$HADOOP_HOME"
+- lineinfile: dest=/root/.bashrc regexp="HADOOP_COMMON_HOME=" line="export HADOOP_COMMON_HOME=$HADOOP_HOME"
+- lineinfile: dest=/root/.bashrc regexp="HADOOP_HDFS_HOME=" line="export HADOOP_HDFS_HOME=$HADOOP_HOME"
+- lineinfile: dest=/root/.bashrc regexp="YARN_HOME=" line="export YARN_HOME=$HADOOP_HOME"
+- lineinfile: dest=/root/.bashrc regexp="HADOOP_CONF_DIR=" line="export HADOOP_CONF_DIR=$HADOOP_HOME/etc/hadoop"
+- lineinfile: dest=/root/.bashrc regexp="YARN_CONF_DIR=" line="export YARN_CONF_DIR=$HADOOP_HOME/etc/hadoop"
+- lineinfile: dest=/root/.bashrc regexp="HADOOP_COMMON_LIB_NATIVE_DIR=" line="export HADOOP_COMMON_LIB_NATIVE_DIR=${HADOOP_HOME}/lib/native"
+- lineinfile: dest=/root/.bashrc regexp="HADOOP_OPTS=" line='export HADOOP_OPTS="-Djava.library.path=$HADOOP_HOME/lib -Djava.net.preferIPv4Stack=true"'
+- lineinfile: dest=/opt/hadoop/etc/hadoop/hadoop-env.sh regexp="JAVA_HOME=" line="export JAVA_HOME=/opt/java"
+- lineinfile: dest=/opt/hadoop/libexec/hdfs-config.sh regexp="JAVA_HOME=" line="export JAVA_HOME=/opt/java"
+- lineinfile: dest=/root/.bashrc regexp="PATH=" line="export PATH=$PATH:$JAVA_HOME/bin"
+- lineinfile: dest=/root/.bashrc regexp="CATALINA_HOME=" line='export CATALINA_HOME=\"/opt/tomcat\"'
 
 - name: "Build hosts file"
-  lineinfile: dest=/ansible_deploy/sample_etc regexp='{{ item.ip }}' line="{{ item.ip }} {{ item.hostname }}" state=present
+  lineinfile: dest=/etc/hosts regexp='{{ item.ip }}' line="{{ item.ip }} {{ item.hostname }}" state=present
   with_items: "{{ nodes }}"
 
 - lineinfile: dest=/etc/hosts regexp='127.0.1.1' state=absent
@@ -32,3 +45,115 @@
     - {src: "roles/common/templates/hdfs-site.xml", dest: "/opt/hadoop/etc/hadoop/hdfs-site.xml"}
     - {src: "roles/common/templates/yarn-site.xml", dest: "/opt/hadoop/etc/hadoop/yarn-site.xml"}
     - {src: "roles/common/templates/mapred-site.xml", dest: "/opt/hadoop/etc/hadoop/mapred-site.xml"}
+
+- name: source bashrc
+  shell: source /{{ hadoop_user }}/.bashrc
+
+#- name: download hbase
+#  get_url: url=https://archive.apache.org/dist/hbase/hbase-1.0.0/hbase-1.0.0-bin.tar.gz dest=/ mode=0777
+
+#- name: unpack HBase
+#  command: bash -c "cd /opt && tar xzf /hbase-1.0.0-bin.tar.gz" creates=/opt/hbase-1.0.0
+
+#- name: create hbase path
+#  shell: cp -r /opt/hbase-1.0.0 /opt/hbase creates=/opt/hbase
+
+#- name: Add the service scripts
+#  template: src={{ item.src }} dest={{ item.dest }} owner={{ hadoop_user}} group={{ hadoop_group }}
+#  with_items:
+#    - {src: "roles/hbase/templates/hbase-site.xml", dest: "/opt/hbase/conf/hbase-site.xml"}
+
+#- name: start HBase
+#  command: bash -c "cd /opt/hbase/bin && ./start-hbase.sh"
+
+#- name: download spark
+#  get_url: url=http://archive.apache.org/dist/spark/spark-1.3.0/spark-1.3.0-bin-hadoop2.4.tgz dest=/opt mode=0777
+
+#- name: unpack Spark
+#  command: bash -c "cd /opt && tar xzf spark-1.3.0-bin-hadoop2.4.tgz"
+
+#- name: create path
+#  command: mv /opt/spark-1.3.0-bin-hadoop2.4 /opt/spark creates=/opt/spark removes=/opt/spark-1.3.0-bin-hadoop2.4
+
+- name: Add the service scripts
+  template: src={{ item.src }} dest={{ item.dest }} owner={{ hadoop_user}} group={{ hadoop_group }}
+  with_items:
+    - {src: "roles/spark/templates/spark-defaults.conf", dest: "/opt/spark/conf/spark-defaults.conf"}
+    - {src: "roles/spark/templates/spark-env.sh", dest: "/opt/spark/conf/spark-env.sh"}
+    - {src: "roles/spark/templates/slaves", dest: "/opt/spark/conf/slaves"}
+
+- name: Install
+  yum: name={{item}} state=present
+  with_items:
+     - libaio-0.3.107-10.el6.x86_64
+     - numactl-2.0.9-2.el6.x86_64
+     - perl-DBI-1.609-4.el6.x86_64
+
+#- name: Install development tools
+#  yum: name={{ item }} state=present
+#  with_items:
+#    - "'@Development Tools'"
+
+#- name: install the mysql rpm from a remote repo
+#  yum: name=http://dev.mysql.com/get/mysql57-community-release-el6-7.noarch.rpm state=present
+
+#- name: verify that the repository is effectively active
+#  command: yum repolist enabled | grep "mysql.*-community.*"
+
+#- name: Install MySQL server fromt he activated repository
+#  command: yum install -y mysql-community-server
+
+#- name: Starting MySQL service
+#  command: service mysqld restart
+
+#- name: download ghostscript
+#  get_url: url=http://downloads.ghostscript.com/public/ghostscript-9.10.tar.gz dest=/ mode=0777
+
+#- name: Creates directory
+#  file: path=/ghostscript-9.10 state=directory
+
+#- unarchive: src=/ghostscript-9.10.tar.gz dest=/ copy=yes
+
+#- name: install ghostscript
+#  shell: cd /ghostscript-9.10 && ./configure && make && sudo make install
+
+#- name: download imagemagick
+#  shell: scp root@205.147.109.156:/software_Uni/imagemagick.tar.gz /
+
+#- name: unpack imagemagick
+#  command: bash -c "cd / && tar xzf imagemagick.tar.gz"
+
+#- name: install Imagemagick
+#  shell: cd /ImageMagick-6.8.9-0 && ./configure --with-quantum-depth=8 --without-perl --with-gslib=yes   --with-bzlib=yes --with-fontconfig=yes --with-freetype=yes --with-gslib=yes --with-gvc=yes --with-jpeg=yes --with-jp2=yes --with-png=yes --with-tiff=yes && make && make install && ldconfig /usr/local/bin
+
+#- name: download tomcat
+#  shell: scp root@205.147.109.156:/software_Uni/apache-tomcat-8.0.18.tar.gz /opt/
+
+#- name: unpack apache tomcat
+#  command: bash -c "cd /opt/ && tar xzf apache-tomcat-8.0.18.tar.gz"
+
+#- name: create path
+#  command: mv /opt/apache-tomcat-8.0.18/ /opt/tomcat creates=/opt/tomcat removes=/opt/apache-tomcat-8.0.18/
+
+#- command: mv /apache-tomcat-8.0.18 /kibana creates=/kibana
+
+#- name: unpack poco
+#  command: bash -c "cd / && tar xzf poco.tar.gz"
+
+#- name: install poco
+#  shell: cd /poco-1.4.6p3 && ./configure && make && make install
+
+#- name: download nuance
+#  shell: scp root@205.147.109.156:/software_Uni/nuance.zip /
+
+#- unarchive: src=/nuance.zip dest=/ copy=yes
+#- unarchive: src=/rpm-csdk-19.0.zip dest=/ copy=yes
+
+#- name: install nuance
+#  shell: sudo rpm -i /nuance-omnipage-csdk-19.0-14572.2000/nuance-omnipage-csdk-lib64-19.0-14572.2000.x86_64.rpm && sudo rpm -i /nuance-omnipage-csdk-19.0-14572.2000/nuance-omnipage-csdk-devel-19.0-14572.2000.x86_64.rpm
+
+#- name: install ldap servers
+#  yum: name=openldap-servers state=present
+
+#- name: install ldap servers
+#  yum: name=openldap-clients state=present

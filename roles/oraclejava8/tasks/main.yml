@@ -7,4 +7,8 @@
 - name: Java  | install rpm
   yum: name=/opt/jdk-8-linux-x64.rpm state=present
 
-- lineinfile: dest=/root/.bashrc regexp="^export JAVA_HOME" line="export JAVA_HOME=/usr/java/latest"
+- file: src=/usr/java/latest dest=/opt/java owner=root group=root state=link
+
+- lineinfile: dest=/root/.bashrc regexp="^export JAVA_HOME" line="export JAVA_HOME=/opt/java"
+
+- lineinfile: dest=/root/.bashrc regexp="^export JRE_HOME" line="export JRE_HOME=$JAVA_HOME/jre/"

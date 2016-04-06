@@ -1,6 +1,11 @@
 ---
 - include_vars: "{{ nodesfile }}"
 
+- name: Add the service scripts in master
+  template: src={{ item.src }} dest={{ item.dest }} owner={{ hadoop_user}} group={{ hadoop_group }}
+  with_items:
+    - {src: "roles/master/templates/yarn-site-master.xml", dest: "/opt/hadoop/etc/hadoop/yarn-site.xml"}
+
 - name: Copy private key into place
   template: src=hadoop_rsa dest=/{{ hadoop_user }}/.ssh/hadoop_rsa owner={{ hadoop_user }} group={{ hadoop_group}} mode=0600
 
@@ -36,3 +41,9 @@
     regexp="^0.0.0.0"
     owner={{ hadoop_user }}
     group={{ hadoop_group }}
+
+- name: download ws war
+  shell: scp root@205.147.109.155:/opt/tomcat/build/eu.war /
+
+- name: download webapp war
+  shell: scp root@205.147.109.155:/opt/tomcat/build/euWs.war /
