@@ -42,8 +42,51 @@
     owner={{ hadoop_user }}
     group={{ hadoop_group }}
 
-- name: download ws war
-  shell: scp root@205.147.109.155:/opt/tomcat/build/eu.war /
+#- name: download ws war
+#  shell: scp root@205.147.109.155:/opt/tomcat/build/eu.war /opt/tomcat/webapps/
 
-- name: download webapp war
-  shell: scp root@205.147.109.155:/opt/tomcat/build/euWs.war /
+#- name: download webapp war
+#  shell: scp root@205.147.109.155:/opt/tomcat/build/euWs.war /opt/tomcat/webapps/
+
+#- name: Creates directory
+#  file: path=/opt/tomcat/webapps/eu state=directory
+
+#- name: Creates directory
+#  file: path=/opt/tomcat/webapps/euWs state=directory
+
+#- name: extract jars to webapps
+#  command: bash -c "cd /opt/tomcat/webapps/eu && jar -xvf /opt/tomcat/webapps/eu.war && cd /opt/tomcat/webapps/euWs && jar -xvf /opt/tomcat/webapps/euWs.war"
+
+#- name: Add the service scripts of tomcat
+#  template: src={{ item.src }} dest={{ item.dest }} owner={{ hadoop_user}} group={{ hadoop_group }}
+#  with_items:
+#    - {src: "roles/master/templates/server.xml", dest: "/opt/tomcat/conf/server.xml"}
+#    - {src: "roles/master/templates/tomcat-users.xml", dest: "/opt/tomcat/conf/tomcat-users.xml"}
+
+#- name: Creates checkout directory
+#  file: path=/srv/checkout state=directory
+
+- git: repo=git@github.com:Ephesoft/Universe.git dest=/srv/checkout clone=yes update=yes force=yes
+
+- name: Add the service scripts of tomcat
+  template: src={{ item.src }} dest={{ item.dest }} owner={{ hadoop_user}} group={{ hadoop_group }}
+  with_items:
+    - {src: "roles/tomcat/templates/spark-conf.properties", dest: "/srv/checkout/eu-data-access/src/main/resources/META-INF/data-access/spark-conf.properties"}
+    - {src: "roles/tomcat/templates/hbase-conf.properties", dest: "/srv/checkout/eu-data-access/src/main/resources/META-INF/data-access/hbase-conf.properties"}
+    - {src: "roles/tomcat/templates/webservice-config.properties", dest: "/srv/checkout/eu-business-data/src/main/resources/META-INF/properties/webservice-config.properties"}
+
+- name: download maven
+  get_url: url=http://mirror.fibergrid.in/apache/maven/maven-3/3.3.9/binaries/apache-maven-3.3.9-bin.tar.gz dest=/opt mode=0777
+ 
+- name: unpack maven
+  command: bash -c "cd /opt && tar xvf apache-maven-3.3.9-bin.tar.gz" creates=/opt/apache-maven-3.3.9
+
+- name: create maven path
+  shell: cp -r /opt/apache-maven-3.3.9 /opt/apache-maven creates=/opt/apache-maven
+
+- lineinfile: dest=/root/.bashrc regexp="M2_HOME=" line="export M2_HOME=/opt/apache-maven"
+- lineinfile: dest=/root/.bashrc regexp="M2=" line="export M2=$M2_HOME/bin" 
+- lineinfile: dest=/root/.bashrc regexp="PATH=" line="export PATH=$M2:$PATH"
+
+- name: source bashrc
+  shell: source /root/.bashrc

@@ -157,3 +157,6 @@
 
 #- name: install ldap servers
 #  yum: name=openldap-clients state=present
+
+- name: shut down apache tomcat
+  command: /opt/tomcat/bin/shutdown.sh

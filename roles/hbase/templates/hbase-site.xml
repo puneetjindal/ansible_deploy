@@ -23,7 +23,7 @@
 <configuration>
 <property>
     <name>hbase.master</name>
-    <value>{{ nodes[0]['hostname'] }}:60010</value>
+    <value>{{ nodes[0]['hostname'] }}:16010</value>
 </property>
 <property>
     <name>hbase.rootdir</name>
@@ -48,5 +48,9 @@
 <property>
     <name>hbase.zookeeper.property.maxClientCnxns</name>
     <value>1000</value>
+</property>
+<property>
+    <name>hbase.coprocessor.user.region.classes</name>
+    <value>org.apache.hadoop.hbase.coprocessor.AggregateImplementation</value>
 </property>
 </configuration>
