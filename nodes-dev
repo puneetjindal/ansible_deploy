@@ -1,5 +1,5 @@
 nodes:
   - hostname: hadoop-master
-    ip: 205.147.109.62 
+    ip: 192.169.1.179 
   - hostname: hadoop-data
-    ip: 205.147.109.63
+    ip: 192.169.1.173

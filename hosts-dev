@@ -1,8 +1,8 @@
 [hadoop-master]
-205.147.109.62             ansible_connection=ssh    ansible_ssh_user=root
+192.169.1.179             ansible_connection=ssh    ansible_ssh_user=root
 
 [hadoop-data]
-205.147.109.63             ansible_connection=ssh    ansible_ssh_user=root
+192.169.1.173             ansible_connection=ssh    ansible_ssh_user=root
 
 [hadoop-master:vars]
 nodesfile=nodes-dev
